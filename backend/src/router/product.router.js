@@ -1,7 +1,7 @@
 const router = require("express").Router();
-const Sequelize = require('sequelize');
+const {Sequelize, Op} = require('sequelize');
 const Usuario = require("../model/usuario.model");
-const BitacoraAccion = require("../model/bitacoraAccion.model"); // Importa directamente el modelo BitacoraAccion
+const {BitacoraAccion, generarFechaHoraBi} = require("../model/bitacoraAccion.model"); // Importa directamente el modelo BitacoraAccion
 const { Incidencia, generateIncidenciaId } = require('../model/incidencia.model');
 const {Diagnostico, generarFechaHora} = require('../model/diagnostico.model');
 const RolUsuario= require("../model/rolUsuario.model");
@@ -107,7 +107,7 @@ router.post('/ingresarSistema', async (req, res) => {
 // POST: Registrar una incidencia
 router.post('/incidencias', async (req, res) => {
     try {
-        const {CT_Usuario,CT_Titulo, CT_Descripcion, CT_Lugar, CN_Costos, CN_Duracion, CT_Imagen } = req.body;
+        const { CT_Usuario, CT_Titulo, CT_Descripcion, CT_Lugar, CN_Costos, CN_Duracion, CT_Imagen } = req.body;
 
         if (!CT_Usuario || !CT_Titulo || !CT_Descripcion || !CT_Lugar) {
             return res.status(400).json({ error: 'Por favor complete todos los campos obligatorios.' });
@@ -117,7 +117,7 @@ router.post('/incidencias', async (req, res) => {
 
         const nuevaIncidencia = await Incidencia.create({
             CN_Id_Incidencia,
-            CN_Id_Estado:1,
+            CN_Id_Estado: 1,
             CT_Usuario,
             CT_Titulo,
             CT_Descripcion,
@@ -127,12 +127,22 @@ router.post('/incidencias', async (req, res) => {
             CT_Imagen
         });
 
-        res.status(201).json(nuevaIncidencia);
+        const fechaHora = generarFechaHoraBi(); // Utiliza la función sincrónica
+        const nuevaBitacora = await BitacoraAccion.create({
+            CN_Id_Bitacoras_Accion: fechaHora,
+            CT_Nombre_Sistema: "SGI",
+            CT_Nombre_Referencia: `${CN_Id_Incidencia}-${CT_Usuario}`,
+            CT_Usuario,
+            CT_Id_Pantalla: "P002"
+        });
+
+        res.status(201).json({ nuevaIncidencia, nuevaBitacora });
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Error al registrar la incidencia.' });
     }
 });
+
 router.post('/diagnosticoIncidencia', async (req, res) => {
     try {
         const { CT_Diagnostico, CN_Id_Incidencia, CT_Requiere_Compra, CT_Tiempo_Estimado, CT_Observaciones, CT_Usuario } = req.body;
@@ -194,13 +204,37 @@ router.get('/incidenciasCuatro', async (req, res) => {
 router.get('/incidenciasRegistrado', async (req, res) => {
     try {
         const incidencias = await Incidencia.findAll({
-            where: { CN_Id_Estado: 1 },
+            where: { CN_Id_Estado: 1 }, // Ajuste de tipo de dato a entero
             attributes: ['CN_Id_Incidencia']
+        });
+
+        console.log('Incidencias encontradas:', incidencias); // Para depuración
+        res.json(incidencias);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Error al obtener incidencias' });
+    }
+});
+  
+router.get('/incidenciasCompraTerminado', async (req, res) => {
+    try {
+        const incidencias = await Incidencia.findAll({
+            where: {
+                [Op.or]: [
+                    { CN_Id_Estado: 5 },
+                    { CN_Id_Estado: 6 }
+                ]
+            },
+            attributes: ['CN_Id_Incidencia', 'CN_Id_Estado'],
+            include: [{
+                model: Diagnostico,
+                attributes: ['CT_Observaciones']
+            }]
         });
         res.json(incidencias);
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Error al obtener incidencias'});
+        res.status(500).json({ error: 'Error al obtener incidencias' });
     }
 });
 router.get("/consultarIncidenciasPorUsuario", async (req, res) => {
@@ -285,87 +319,70 @@ router.get('/incidenciasIdCuatro', async (req, res) => {
         res.status(500).json({ error: 'Error al obtener usuarios'});
     }
 });
-
 router.post('/asignarIncidencia', async (req, res) => {
-    const {
-      CT_Usuario,
-      CN_Id_Incidencia,
-      CN_Id_Riesgo,
-      CN_Id_Prioridad,
-      CN_Id_Afectacion,
-      CN_Id_Categoria,
-      CN_Costos,
-      CN_Duracion
-    } = req.body;
-  
-    // Verificar si todos los campos están presentes y son válidos
-    if (
-      !CT_Usuario ||
-      !CN_Id_Incidencia ||
-      CN_Id_Riesgo === undefined ||
-      CN_Id_Prioridad === undefined ||
-      CN_Id_Afectacion === undefined ||
-      CN_Id_Categoria === undefined ||
-      CN_Costos === undefined ||
-      CN_Duracion === undefined
-    ) {
-      return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
-    }
-  
+    // Extraer datos del cuerpo de la solicitud
+    const { CT_Usuario, CN_Id_Incidencia, CN_Id_Prioridad, CN_Id_Riesgo, CN_Id_Afectacion, CN_Id_Categoria, CN_Duracion, CN_Costos } = req.body;
+
     try {
-      // Verificar si el usuario tiene el rol necesario para asignar incidencias
-      const usuarioConRol = await RolUsuario.findOne({
-        where: {
-          CT_Usuario,
-          CN_Id_Rol: 4
-        }
-      });
-      if (!usuarioConRol) {
-        return res.status(403).json({ error: 'El usuario no tiene el rol necesario para asignar incidencias.' });
-      }
-  
-      // Verificar si la incidencia ya está asignada al usuario
-      const incidenciaAsignada = await AsignarIncidencia.findOne({
-        where: {
-          CT_Usuario,
-          CN_Id_Incidencia
-        }
-      });
-      if (incidenciaAsignada) {
-        return res.status(400).json({ error: 'La incidencia ya ha sido asignada a este usuario.' });
-      }
-  
-      // Asignar la incidencia al usuario
-      const asignacion = await AsignarIncidencia.create({
-        CT_Usuario,
-        CN_Id_Incidencia
-      });
-  
-      // Actualizar la incidencia con los nuevos campos y cambiar el estado a 2
-      await Incidencia.update(
-        {
-          CN_Id_Estado: 3,
-          CN_Id_Riesgo,
-          CN_Id_Prioridad,
-          CN_Id_Afectacion,
-          CN_Id_Categoria,
-          CN_Costos,
-          CN_Duracion
-        },
-        {
-          where: {
-            CN_Id_Incidencia
-          }
-        }
-      );
-  
-      return res.status(201).json(asignacion);
+        // Buscar todos los usuarios con el rol necesario para asignar incidencias (rol con CN_Id_Rol: 4)
+        const usuariosConRol = await RolUsuario.findAll({
+            where: {
+                CT_Usuario: CT_Usuario,
+                CN_Id_Rol: 4
+            }
+        });
+        // Extraer los CT_Usuario de los usuarios que tienen el rol necesario
+        const usuariosValidos = usuariosConRol.map(ur => ur.CT_Usuario);
+  // Filtrar los usuarios válidos para encontrar aquellos que aún no tienen asignada la incidencia
+          const incidenciasAsignadas = await AsignarIncidencia.findAll({
+            where: {
+                CT_Usuario: usuariosValidos,
+                CN_Id_Incidencia
+            }
+        });
+
+        const usuariosYaAsignados = incidenciasAsignadas.map(ia => ia.CT_Usuario);
+
+        const usuariosParaAsignar = usuariosValidos.filter(u => !usuariosYaAsignados.includes(u));
+
+        const asignaciones = await Promise.all(usuariosParaAsignar.map(async (CT_Usuario) => {
+            return await AsignarIncidencia.create({
+                CT_Usuario,
+                CN_Id_Incidencia
+            });
+        }));
+
+        await Incidencia.update(
+            {
+                CN_Id_Estado: 3,
+                CN_Id_Prioridad,
+                CN_Id_Riesgo,
+                CN_Id_Afectacion,
+                CN_Id_Categoria,
+                CN_Duracion,
+                CN_Costos
+            },
+            {
+                where: {
+                    CN_Id_Incidencia
+                }
+            }
+        );
+        const fechaHora = generarFechaHoraBi(); // Utiliza la función sincrónica
+        const nuevaBitacora = await BitacoraAccion.create({
+            CN_Id_Bitacoras_Accion: fechaHora,
+            CT_Nombre_Sistema: "SGI",
+            CT_Nombre_Referencia:`${CN_Id_Incidencia}-${CT_Usuario}`,
+            CT_Usuario:CT_Usuario+"",
+            CT_Id_Pantalla: "P003"
+        });
+
+        return res.status(201).json({asignaciones, nuevaBitacora });
     } catch (error) {
-      console.error('Error al asignar incidencia:', error);
-      return res.status(500).json({ error: 'Error interno al procesar la solicitud.' });
+        console.error('Error al asignar incidencia:', error);
+        return res.status(500).json({ error: 'Error interno al procesar la solicitud.' });
     }
-  });
-  
+});
 
 router.get("/consultarIncidenciasAsignadas", async (req, res) =>{
     try {
@@ -454,4 +471,66 @@ router.put('/trabajar', async (req, res) => {
       res.status(500).json({ error: 'Error al cambiar el estado de la incidencia' });
     }
   });
+  router.get('/cargaDeTrabajo', async (req, res) => {
+    try {
+        // Obtener todas las asignaciones de incidencias
+        const asignaciones = await AsignarIncidencia.findAll();
+
+        // Obtener los CN_Id_Incidencia de las asignaciones
+        const incidenciaIds = asignaciones.map(a => a.CN_Id_Incidencia);
+        
+        const incidencias = await Incidencia.findAll({
+            where: { CN_Id_Incidencia: incidenciaIds }
+        });
+        const categorias = {};
+        incidencias.forEach(incidencia => {
+            const categoriaId = incidencia.CN_Id_Categoria;
+            if (!categorias[categoriaId]) {
+                categorias[categoriaId] = { trabajoPendiente: 0, trabajoFinalizado: 0 };
+            }
+
+            if (incidencia.CN_Id_Estado !== 9) {
+                categorias[categoriaId].trabajoPendiente += incidencia.CN_Duracion || 0;
+            } else {
+                categorias[categoriaId].trabajoFinalizado += incidencia.CN_Duracion || 0;
+            }
+        });
+
+        res.json(categorias);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error al obtener el trabajo' });
+    }
+});
+
+router.put('/supervisorIncidencia', async (req, res) => {
+    const { id } = req.query;
+    const { CN_Id_Estado, justificacionCierre } = req.body;
+
+    if (!id) {
+        return res.status(400).json({ message: 'El parámetro id es requerido' });
+    }
+
+    try {
+        // Buscar la incidencia por ID
+        const incidencia = await Incidencia.findByPk(id);
+
+        if (!incidencia) {
+            return res.status(404).json({ message: 'Incidencia no encontrada' });
+        }
+
+        // Actualizar los campos
+        incidencia.CN_Id_Estado = CN_Id_Estado;
+        incidencia.justificacionCierre = justificacionCierre;
+
+        // Guardar los cambios
+        await incidencia.save();
+
+        return res.status(200).json({ message: 'Incidencia actualizada correctamente', incidencia });
+    } catch (error) {
+        console.error('Error al actualizar la incidencia:', error);
+        return res.status(500).json({ message: 'Error al actualizar la incidencia' });
+    }
+});
+
 module.exports=router;

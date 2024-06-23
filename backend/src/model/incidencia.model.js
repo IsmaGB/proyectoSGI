@@ -38,7 +38,7 @@ Incidencia.init(
             allowNull: false,
             references: {
                 model: Estado, // Nombre del modelo referenciado
-                key: 'id', // Clave referenciada en la tabla t_estados
+                key: 'CN_Id_Estado', // Clave referenciada en la tabla t_estados
             }
         },
         CT_Usuario: {
@@ -104,6 +104,10 @@ Incidencia.init(
         CT_Imagen:{
             type: DataTypes.TEXT('long'),
             allowNull: true,
+        },
+        justificacionCierre:{
+            type: DataTypes.STRING,
+            allowNull:true,
         },
         createdAt: {
             type: DataTypes.DATE,
