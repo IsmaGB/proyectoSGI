@@ -1,0 +1,54 @@
+/* /////////////////diagnostico///////////////// */
+body {
+    background-color: #f2f2f2;
+    font-family: Arial, sans-serif;
+  }
+  .label-custom{
+    color:black;
+  }
+  .container {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background-color: #fff;
+    margin: 60px auto;
+    padding: 40px;
+    width: 90%;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.965);
+  }
+  
+  form {
+    margin-top: 20px;
+  }
+  
+  .label-custom {
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+  }
+  
+  .input-custom,
+  textarea.input-custom {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: black;
+    box-sizing: border-box;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .btn-custom {
+    background-color: #4caf50;
+    color: black;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .btn-custom:hover {
+    background-color: #45a049;
+  }

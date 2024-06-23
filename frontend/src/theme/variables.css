@@ -1,0 +1,150 @@
+ion-menu::part(backdrop) {
+    background-color: rgba(255, 0, 255, 0.5);
+  }
+  
+  ion-menu::part(container) {
+    border-radius: 0 20px 20px 0;
+  
+    box-shadow: 4px 0px 16px rgba(255, 0, 255, 0.18);
+  }
+  /* Sidebar.css */
+  
+  .sidebar {
+    font-family: 'Comic Sans MS', cursive, sans-serif; 
+    position: fixed;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background: #ecc1c1;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+  
+  .sidebar.show {
+    left: 0;
+  }
+  
+  .menu-icon {
+    position: fixed;
+    top: 8px;
+    left: 15px;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 100;
+  }
+  /* ***********************************LISTA DE INCIDENTES*************************************************** */
+  
+  /* Estilos para el contenedor de las tarjetas */
+  .cards-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    justify-content: center;
+    padding: 16px;
+    overflow-x: auto;
+  }
+  
+  /* Estilos para cada tarjeta */
+  .card {
+    font-family: 'Comic Sans MS', cursive, sans-serif; 
+    background: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.866);
+    width: 100%;
+    max-width: 380px;
+    /* flex: 1; */
+    margin: 8px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  
+  /* Estilos para el encabezado de la tarjeta */
+  .card-header {
+    border-bottom: 1px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 16px;
+  }
+  
+  /* Estilos para el título de la tarjeta */
+  .card-header h2 {
+    font-size: 1.2em;
+    color: #333;
+    margin: 0;
+  }
+  
+  /* Estilos para el subtítulo de la tarjeta */
+  .card-header h3 {
+    font-size: 1em;
+    color: #777;
+    margin: 0;
+  }
+  
+  /* Estilos para el contenido de la tarjeta */
+  .card-content {
+    font-size: 0.9em;
+    color: #555;
+  }
+  
+  /* Estilos para el contenido fuerte de la tarjeta */
+  .card-content p strong {
+    font-weight: bold;
+    color: #333;
+  }
+  
+  /* /////////////////diagnostico///////////////// */
+  body {
+    background-color: #f2f2f2;
+    font-family: Arial, sans-serif;
+  }
+  
+  .container {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background-color: #fff;
+    margin: 60px auto;
+    padding: 40px;
+    width: 90%;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.965);
+  }
+  
+  form {
+    margin-top: 20px;
+  }
+  
+  .label-custom {
+    font-weight: bold;
+    margin-bottom: 10px;
+    display: block;
+  }
+  
+  .input-custom,
+  textarea.input-custom {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+  .label-custom{
+    color:black;
+  }
+  
+  .btn-custom {
+    background-color: #4caf50;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 20px;
+  }
+  
+  .btn-custom:hover {
+    background-color: #45a049;
+  }
+ 

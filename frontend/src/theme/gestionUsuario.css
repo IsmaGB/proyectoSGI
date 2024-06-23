@@ -1,0 +1,76 @@
+ /* *******************Modal Usuario********************** */
+ .modal-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 80vh;
+    height: 700px;
+    color: #020202;
+    font-size: 17px;
+    background-color: #a7c1de;
+    margin: 10px auto;
+    padding: 20px;
+    width: 310px;
+    align-items: center;
+    border-radius: 5px;
+    box-shadow: 0 0 30px rgba(33, 32, 32, 0.965);
+    overflow-y: auto;
+  }
+  
+  .modal-header {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .modal-body {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 15px;
+  }
+  
+  .form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .modal-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  .btn-custom {
+    padding: 10px 20px;
+    margin: 5px;
+}
+
+.btn-custom-danger {
+    background-color: red;
+    color: white;
+}
+ /* Sidebar.css */
+  
+ .sidebar {
+    font-family: 'Comic Sans MS', cursive, sans-serif; 
+    position: fixed;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+    background: #ecc1c1;
+    transition: left 0.3s ease;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+  }
+  
+  .sidebar.show {
+    left: 0;
+  }
+  
+  .menu-icon {
+    position: fixed;
+    top: 8px;
+    left: 15px;
+    font-size: 28px;
+    cursor: pointer;
+    z-index: 100;
+  }
